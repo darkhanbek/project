@@ -1,0 +1,94 @@
+version: '3'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.28.1
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Almaty"
+    networks:
+      - default
+  
+  alertmanager-bot:
+    command:
+      - --alertmanager.url=http://10.8.95.38:9093
+      - --log.level=info
+      - --store=bolt
+      - --bolt.path=/data/bot.db
+      - --telegram.admin=1487722661
+      - --telegram.token=6979704605:AAGjjMmhPxiSoU6cYsUkwGb1L6wdbGa9cCo
+    image: metalmatze/alertmanager-bot:0.4.3
+    user: root
+    ports:
+      - 8080:8080
+    container_name: alertmanager-bot
+    hostname: alertmanager-bot
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    networks:
+      - default
+  
+  alertmanager:
+    image: prom/alertmanager:v0.22.2
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager:/etc/alertmanager/
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/etc/alertmanager/data'
+    ports:
+      - "9093:9093"
+    networks:
+      - default
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.2.2
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
+    environment:
+      TZ: "Asia/Almaty"
+    ports:
+      - "9100:9100"
+    networks:
+      - default
+
+  grafana:
+    image: grafana/grafana:8.3.2
+    container_name: grafana
+    volumes:
+      - ./grafana/grafana-data:/var/lib/grafana
+      - ./grafana/grafana-provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    user: root
+    hostname: grafana
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Almaty"
+    networks:
+      - default
+    depends_on:
+      - prometheus
+
+networks:
+  default:
+    driver: bridge

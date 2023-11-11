@@ -1,0 +1,19 @@
+scrape_configs:
+  - job_name: prometheus
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: srv_master
+    static_configs:
+      - targets: ['10.8.95.38:9100']
+  - job_name: srv_slave
+    static_configs:
+      - targets: ['10.8.95.39:9100']
+rule_files:
+  - 'alert.rules.yml'
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+      - "10.8.95.38:9093"
