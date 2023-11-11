@@ -15,7 +15,7 @@ services:
       TZ: "Asia/Almaty"
     networks:
       - default
-
+  
   alertmanager-bot:
     command:
       - --alertmanager.url=http://10.8.95.38:9093
@@ -35,7 +35,7 @@ services:
       - ./data:/data
     networks:
       - default
-
+  
   alertmanager:
     image: prom/alertmanager:v0.22.2
     container_name: alertmanager
@@ -92,4 +92,3 @@ services:
 networks:
   default:
     driver: bridge
-
